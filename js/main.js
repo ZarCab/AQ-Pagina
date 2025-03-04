@@ -103,4 +103,120 @@ style.textContent = `
         transform: translateY(0);
     }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(style);
+
+// Tech Slider Functionality
+document.addEventListener('DOMContentLoaded', () => {
+    const slider = document.querySelector('.tech-slider');
+    const prevArrow = document.querySelector('.prev-arrow');
+    const nextArrow = document.querySelector('.next-arrow');
+    const sliderDots = document.querySelector('.slider-dots');
+    
+    if (!slider || !prevArrow || !nextArrow || !sliderDots) return;
+    
+    const items = slider.querySelectorAll('.tech-card');
+    const totalItems = items.length;
+    let currentIndex = 0;
+    
+    // Calculate how many items are visible based on screen width
+    function getVisibleItems() {
+        if (window.innerWidth >= 1200) {
+            return 4; // Show 4 items on large screens
+        } else if (window.innerWidth >= 992) {
+            return 3; // Show 3 items on medium screens
+        } else if (window.innerWidth >= 768) {
+            return 2; // Show 2 items on small screens
+        } else {
+            return 1; // Show 1 item on mobile
+        }
+    }
+    
+    // Calculate total number of possible positions
+    function getTotalPositions() {
+        const visibleItems = getVisibleItems();
+        return Math.max(0, totalItems - visibleItems);
+    }
+    
+    // Create dots based on total positions
+    function createDots() {
+        // Clear existing dots
+        sliderDots.innerHTML = '';
+        
+        const totalPositions = getTotalPositions() + 1;
+        
+        for (let i = 0; i < totalPositions; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('slider-dot');
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => {
+                goToPosition(i);
+            });
+            sliderDots.appendChild(dot);
+        }
+    }
+    
+    // Update dots
+    function updateDots() {
+        const dots = sliderDots.querySelectorAll('.slider-dot');
+        dots.forEach((dot, index) => {
+            if (index === currentIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+    
+    // Go to position
+    function goToPosition(index) {
+        const totalPositions = getTotalPositions();
+        currentIndex = Math.max(0, Math.min(index, totalPositions));
+        
+        const itemWidth = items[0].offsetWidth + 20; // Including gap
+        const offset = -currentIndex * itemWidth;
+        slider.style.transform = `translateX(${offset}px)`;
+        
+        updateDots();
+        updateArrows();
+    }
+    
+    // Update arrows state
+    function updateArrows() {
+        const totalPositions = getTotalPositions();
+        
+        prevArrow.disabled = currentIndex === 0;
+        nextArrow.disabled = currentIndex >= totalPositions;
+        
+        prevArrow.style.opacity = prevArrow.disabled ? '0.5' : '1';
+        nextArrow.style.opacity = nextArrow.disabled ? '0.5' : '1';
+    }
+    
+    // Previous slide
+    prevArrow.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            goToPosition(currentIndex - 1);
+        }
+    });
+    
+    // Next slide
+    nextArrow.addEventListener('click', () => {
+        const totalPositions = getTotalPositions();
+        if (currentIndex < totalPositions) {
+            goToPosition(currentIndex + 1);
+        }
+    });
+    
+    // Initialize
+    createDots();
+    goToPosition(0);
+    
+    // Handle window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            createDots();
+            goToPosition(Math.min(currentIndex, getTotalPositions()));
+        }, 200);
+    });
+}); 
